@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t panfio/ci -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run panfio/ci npm run test -- --coverage
+
+after_sucsess:
+  - docker build -t panfio/ci-client ./client
+  - docker build -t panfio/ci-nginx ./nginx
+  - docker build -t panfio/ci-server ./server
+  - docker build -t panfio/ci-worker ./worker
+#deploy:
+#  provider: elasticbeanstalk
+#  region: "us-west-2"
+#  app: "App name"
+#  env: "env name"
+#  bucket-name: "07-09 ba bla bla"
+#  bucket-path: "App name"
+#  on:
+#    branch: master
