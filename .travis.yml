@@ -8,7 +8,7 @@ before_install:
 script:
   - docker run panfio/ci npm run test -- --coverage
 
-after_succsess:
+after_success:
   - docker build -t panfio/ci-client ./client
   - docker build -t panfio/ci-nginx ./nginx
   - docker build -t panfio/ci-server ./server
