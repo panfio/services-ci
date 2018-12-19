@@ -13,7 +13,7 @@ after_success:
   - docker build -t panfio/ci-nginx ./nginx
   - docker build -t panfio/ci-server ./server
   - docker build -t panfio/ci-worker ./worker
-  - echo "DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
   - docker push panfio/ci-client
   - docker push panfio/ci-nginx
   - docker push panfio/ci-server
