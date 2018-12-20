@@ -1,23 +1,37 @@
 sudo: required
 services:
   - docker
-
+env:
+  global:
+    - GIT_SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMTS=1
+    - DOCKERHUB_USERNAME=panfio
 before_install:
-  - docker build -t panfio/ci -f ./client/Dockerfile.dev ./client
+  - openssl aes-256-cbc -K $encrypted_0c35eebf403c_key -iv $encrypted_0c35eebf403c_iv -in srv-acc.json.enc -out srv-acc.json -d
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  - gcloud auth activate-service-account --key-file srv-acc.json
+
+  - gcloud config set project k8s-project-71318
+  - gcloud config set compute/zone europe-west4-a
+  - gcloud container clusters get-credentials k8s-cluster-1
+  
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker build -t panfio/ci-test -f ./client/Dockerfile.dev ./client
 
 script:
-  - docker run panfio/ci npm run test -- --coverage
+  - docker run panfio/ci-test npm run test -- --coverage
 
-after_success:
-  - docker build -t panfio/ci-client ./client
-  - docker build -t panfio/ci-nginx ./nginx
-  - docker build -t panfio/ci-server ./server
-  - docker build -t panfio/ci-worker ./worker
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-  - docker push panfio/ci-client
-  - docker push panfio/ci-nginx
-  - docker push panfio/ci-server
-  - docker push panfio/ci-worker
+#after_success:
+#  - docker build -t panfio/ci-client ./client
+#  - docker push panfio/ci-client
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
 #deploy:
 #  provider: elasticbeanstalk
 #  region: "us-west-2"
